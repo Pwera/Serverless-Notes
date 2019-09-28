@@ -1,0 +1,6 @@
+hello/build/*
+hello/target/*
+hello/Cargo.lock
+hello/.gradle/*
+.gradle/*
+hello/hello.jar

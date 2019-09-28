@@ -81,5 +81,58 @@ Hello.java
 ```
 OpenWhisk Java helloworld steps
 
+OpenWhisk allows to deploy to:
+- Kubernetes
+- Mesos
+- OpenShift
+- Vagrant
+- Docker Compose
+
+Event providers:
+- Alarms (scheduled task)
+- CouchDB
+- Github
+- Kafka
+- RSS
+
+OpenWhisk actions sandboxes in docker container.
+OpenWhisk ecosystem allows to run short scalable functions in a serverless fashion.
+Commercial: bluemix.net/openwhisk
+
+API Gateway
+When you want to do more  with HTTP endpoints
+- Route endpoints methods to actions
+- Custom domains
+- Rate limiting
+- Security 
+- Analytics
+
+Packages
+- Group of actions together
+- Set parameters used by all actions
+
+Sequences
+Invoke a set of actions in turn
+
+``` 
+    wsk property set --auth "$auth" --apihost https://192.168.0.104 -i
+    wsk -i action list
+    wsk -i action create helloJava main.jar --main Main --web true --docker openwhisk/java8action
+    wsk action get --url helloJava
+
+```
+OpenWhisk flow
+
+``` 
+    This repository contains ready to run polyglot examples of OpenWhisk
+    1) hello/ contains java, node, go serverless functions that by default print hello world, or hello <arg> if arg was passed
+
+```
+
 ## Kuma
  
+
+
+Sources:
+Adventures in Apache Openwhisk - Rob Allen
+Apache OpenWhisk: How it Works and How You Can Benefit - Carlos Santana, IBM
