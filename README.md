@@ -9,6 +9,12 @@
 Install OpenWhisk 
 
 ``` 
+    This repository contains ready to run polyglot examples of OpenWhisk
+    1) hello/ contains java, node, go, (rust & ballerina in progress) serverless functions that by default print hello world, or hello <arg> if arg was passed.
+
+```
+
+``` 
     package main
 
     import "fmt"
@@ -123,16 +129,13 @@ Invoke a set of actions in turn
 ```
 OpenWhisk flow
 
-``` 
-    This repository contains ready to run polyglot examples of OpenWhisk
-    1) hello/ contains java, node, go serverless functions that by default print hello world, or hello <arg> if arg was passed
-
-```
 
 ## Kuma
  
 
 
 Sources:
+
 Adventures in Apache Openwhisk - Rob Allen
+
 Apache OpenWhisk: How it Works and How You Can Benefit - Carlos Santana, IBM

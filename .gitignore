@@ -1,5 +1,7 @@
 hello/build/*
 hello/target/*
+hello/exec
+hello/hello.balx
 hello/Cargo.lock
 hello/.gradle/*
 .gradle/*
