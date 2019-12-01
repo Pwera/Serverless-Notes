@@ -42,7 +42,7 @@ if [ "$1" == "create" ]; then
 		gradle build
 		$wsk -i action create helloJava hello.jar --main Hello --docker openwhisk/java8action
 	fi
-	$wsk -i action create helloRust src/main.rs --docker openwhisk/actionloop-rust-v1.34
+	$wsk -i action create helloRust src/main.rs --docker openwhisk/actionloop-rust-v1.34:nightly
 	
 	if "$isBallerinaExist" ;then
 		ballerina build src/main/ballerina/hello.bal
@@ -61,21 +61,53 @@ fi
 
 
 if [ "$1" == "invoke" ]; then
-	if "$isJavaExist" && "$isGradleExist" ;then
-		$wsk -i action invoke helloJava  -r
+	if "$isJavaExist" && "$isGradleExist" ;then			
+		TIMEFORMAT='It takes %R seconds to complete helloJava task.'
+		time {
+	    	$wsk -i action invoke helloJava  -r
+	 	}
 	fi
-	$wsk -i action invoke helloGo -r
-	$wsk -i action invoke helloNode -r
-	$wsk -i action invoke helloScript -r
-	$wsk -i action invoke helloBallerina -r
-	$wsk -i action invoke helloRust -r
 
-	$wsk -i action invoke helloJava  -r -p name pwera
-	$wsk -i action invoke helloGo  -r -p name pwera
-	$wsk -i action invoke helloNode -r -p name pwera
+	TIMEFORMAT='It takes %R seconds to complete helloGo task.'
+	time {
+    	$wsk -i action invoke helloGo -r
+ 	}
 
+	TIMEFORMAT='It takes %R seconds to complete helloNode task.'
+	time {
+    	$wsk -i action invoke helloNode -r
+ 	}
 
+ 	TIMEFORMAT='It takes %R seconds to complete helloScript task.'
+	time {
+    	$wsk -i action invoke helloScript -r
+ 	}
+	
+	TIMEFORMAT='It takes %R seconds to complete helloBallerina task.'
+	time {
+    	$wsk -i action invoke helloBallerina -r
+ 	}
+	
+	TIMEFORMAT='It takes %R seconds to complete helloRust task.'
+	time {
+    	$wsk -i action invoke helloRust -r
+ 	}
+	
+	TIMEFORMAT='It takes %R seconds to complete helloJava task with args.'
+	time {
+    	$wsk -i action invoke helloJava  -r -p name pwera
+ 	}
+
+	TIMEFORMAT='It takes %R seconds to complete helloGo task with args.'
+	time {
+    	$wsk -i action invoke helloGo  -r -p name pwera
+ 	}
+	
+	TIMEFORMAT='It takes %R seconds to complete helloNode task with args.'
+	time {
+    	$wsk -i action invoke helloNode -r -p name pwera
+ 	}
+	
 fi
-
 
 $wsk   -i action list
