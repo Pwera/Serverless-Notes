@@ -588,6 +588,261 @@ ibmcloud fn action invoke example -r -p fail true
 }
 ```
 
+###### Packages
+IBM Cloud Functions (ICF) comes pre-installed with a number of public packages, which include trigger feeds used to register triggers with event sources.
+
+Actions in public packages can be used by anyone and the caller pays the invocation cost.
+
+Get a list of packages in the /whisk.system namespace
+``` bash
+ibmcloud fn package list /whisk.system
+```
+
+```bash
+packages
+   /whisk.system/alarms                      shared
+   /whisk.system/cloudant                    shared
+   /whisk.system/combinators                 shared
+   /whisk.system/cos                         shared
+   /whisk.system/github                      shared
+   /whisk.system/messaging                   shared
+   /whisk.system/pushnotifications           shared
+   /whisk.system/samples                     shared
+   /whisk.system/slack                       shared
+   /whisk.system/utils                       shared
+   /whisk.system/watson-speechToText         shared
+   /whisk.system/watson-textToSpeech         shared
+   /whisk.system/watson-translator           shared
+   /whisk.system/weather                     shared
+   /whisk.system/websocket                   shared
+```
+Get a list of entities in the /whisk.system/cloudant package
+
+``` bash
+ibmcloud fn package get --summary /whisk.system/cloudant
+```
+
+Get a description of the /whisk.system/cloudant/read action
+``` bash
+ibmcloud fn action get --summary /whisk.system/cloudant/read
+```
+``` bash
+ action /whisk.system/cloudant/read: Read document from database
+      (parameters: *apihost, *bluemixServiceName, dbname, *id, params)
+```
+###### Invoke actions in a package
+You can invoke actions in a package, just as with other actions. The next few steps show how to invoke the greeting action in the /whisk.system/samples package with different parameters.
+Get a description of the /whisk.system/samples/greeting action:
+```bash
+ibmcloud fn action get --summary /whisk.system/samples/greeting
+```
+```bash
+action /whisk.system/samples/greeting: Returns a friendly greeting
+      (parameters: name, place)
+```
+
+```bash
+Invoke the action without any parameters
+```
+```bash
+ibmcloud fn action invoke --result /whisk.system/samples/greeting
+```
+
+
+
+###### Create and use package bindings
+Although you can use the entities in a package directly, you might find yourself passing the same parameters to the action every time. You can avoid this by binding to a package and specifying default parameters. These parameters are inherited by the actions in the package.
+
+
+Bind to the /whisk.system/samples package and set a default place parameter value:
+```bash
+ibmcloud fn package bind /whisk.system/samples valhallaSamples --param place Valhalla
+```
+```bash
+ok: created binding valhallaSamples
+```
+Get a description of the package binding:
+```bash
+ibmcloud fn package get --summary valhallaSamples
+```
+```bash
+ package /namespace/valhallaSamples: Returns a result based on parameter place
+      (parameters: *place)
+    action /namespace/valhallaSamples/helloWorld: Demonstrates logging facilities
+       (parameters: payload)
+    action /namespace/valhallaSamples/greeting: Returns a friendly greeting
+       (parameters: name, place)
+    action /namespace/valhallaSamples/curl: Curl a host url
+       (parameters: payload)
+    action /namespace/valhallaSamples/wordCount: Count words in a string
+       (parameters: payload)
+```
+Invoke an action in the package binding:
+```bash
+ ibmcloud fn action invoke --result valhallaSamples/greeting --param name Odin
+ ```
+ ```json
+{
+       "payload": "Hello, Odin from Valhalla!"
+}
+```
+Invoke an action and overwrite the default parameter value:
+```bash
+ibmcloud fn action invoke --result valhallaSamples/greeting --param name Odin --param place Asgard
+```
+```json
+{
+       "payload": "Hello, Odin from Asgard!"
+}
+```
+###### Create custom packages
+Custom packages can be used to group your own actions, manage default parameters, and share entities with other users.
+Create a package called custom:
+```bash
+ibmcloud fn package create custom
+```
+Get a summary of the package:
+```bash
+ibmcloud fn package get --summary custom
+```
+Create a file called identity.js that contains the following action code. This action returns all input parameters:
+```js
+function main(args) { return args; }
+```
+Create an identity action in the custom package
+```bash
+ibmcloud fn action create custom/identity identity.js
+```
+Get a summary of the package again:
+```bash
+ibmcloud fn package get --summary custom
+```
+```bash
+ package /myNamespace/custom
+      (parameters: none defined)
+   action /myNamespace/custom/identity
+      (parameters: none defined)
+```
+Invoke the action in the package:
+```bash
+ibmcloud fn action invoke --result custom/identity
+```
+```json
+{}
+```
+###### Set default package parameters
+You can set default parameters for all the entities in a package. You do this by setting package level parameters that are inherited by all actions in the package.
+Update the custom package with two parameters: city and country:
+```bash
+ibmcloud fn package update custom --param city Austin --param country USA
+```
+Display the parameters in the package:
+```bash
+ibmcloud fn package get custom
+```
+Invoke the identity action without any parameters to verify that the action indeed inherits the parameters:
+```bash
+ibmcloud fn action invoke --result custom/identity
+```
+Invoke the identity action with a few parameters:
+```bash
+ibmcloud fn action invoke --result custom/identity --param city Dallas --param state Texas
+```
+Invocation parameters are merged with the package parameters. The invocation parameters override the package parameters.
+
+
+###### Share packages
+After the actions and feeds that comprise a package are debugged and tested, the package can be shared with all ICF users. Sharing the package makes it possible for the users to bind the package, invoke actions in the package, and author their own rules and sequence actions.
+Share the package with all users:
+```bash
+ibmcloud fn package update custom --shared yes
+```
+Display the publish property of the package to verify that it is now true:
+```bash
+ibmcloud fn package get custom
+```
+Others can now use your custom package, including binding to the package or directly invoking an action in it. Other users must know the fully qualified names of the package to bind it or invoke actions in it. Actions and feeds within a shared package are public. If the package is private, then all of its contents are also private.
+Get a description of the package to show the fully qualified names of the package and action:
+```bash
+ibmcloud fn package get --summary custom
+```
+```bash
+package /myNamespace/custom: Returns a result based on parameters city and country
+     (parameters: *city, *country)
+   action /myNamespace/custom/identity
+     (parameters: none defined)
+```
+###### Triggers
+
+Triggers are a named channel for a class of events. The following are examples of triggers:
+
+- A trigger of location update events
+- A trigger of document uploads to a website
+- A trigger of incoming emails
+Triggers can be fired, or activated, by using a dictionary of key-value pairs. Sometimes this dictionary is referred to as the normalized, internal event. However, these normalized events are often a representation of raw data coming from external events generated outside the serverless platform. As with actions, each firing of a trigger results in an activation ID.
+
+Triggers can be explicitly fired by a user or by an external event source. A feed is a convenient way to configure an external event source to fire trigger events that can be consumed by ICF. Examples of feeds include:
+
+- CouchDB data change feed that fires a trigger event each time a document in a database is added or modified
+- A Git feed that fires a trigger event for every commit to a Git repository
+
+Instances of triggers can also be fired with parameters that can be passed on to one or more actions they can be connected to using rules.
+ 
+###### Rules
+A rule associates one trigger with one action. Every firing of the trigger causes the corresponding action to be invoked with the trigger event as input.
+
+With the appropriate set of rules, it's possible for a single trigger event to invoke multiple actions, or for an action to be invoked as a response to events from multiple triggers.
+
+Create triggers: 
+You can create multiple rules that associate the same trigger with different actions.
+```bash
+ibmcloud fn trigger create locationUpdate
+ibmcloud fn trigger list
+ibmcloud fn trigger fire locationUpdate -p name "Barry" -p place "Central City"
+ibmcloud fn trigger update locationUpdate -p name "Barry" -p place "Central City"
+ibmcloud fn trigger get locationUpdate
+ibmcloud fn action invoke --result hello --param name Oliver --param place "Starling City"
+ibmcloud fn trigger get locationUpdate
+## rule trigger action
+ibmcloud fn rule create myRule locationUpdate hello
+ibmcloud fn rule get myRule
+## test rule
+ibmcloud fn trigger fire locationUpdate --param name Kara --param place "Krypton"
+ibmcloud fn activation list --limit 2
+```
+
+###### Connect trigger feeds
+Trigger feeds allow you to connect triggers to external event sources. Event sources will fire registered triggers each time an event occurs. Here’s a list of the packages currently supported on IBM Cloud Functions (ICF) which include feeds to easily connect you to services like Slack, GitHub and IBM Watson.
+```bash
+ibmcloud fn package get --summary /whisk.system/alarms
+ibmcloud fn action get --summary /whisk.system/alarms/interval
+ibmcloud fn trigger create everyMinute --feed /whisk.system/alarms/interval -p minutes 1 -p trigger_payload "{\"name\":\"Mork\", \"place\":\"Ork\"}"
+ibmcloud fn rule create everyMinuteRule everyMinute hello
+ibmcloud fn activation poll
+ibmcloud fn trigger delete everyMinute
+ibmcloud fn rule delete everyMinuteRule
+```
+###### Web actions
+Cloud Function actions can be annotated with a special flag, --web true, at creation to convert them into web actions. The result is the corresponding creation of a public URL that can be used to trigger the action from any web app.
+
+Web actions can then be invoked via HTTP requests without user authentication where the HTTP request parameters are automatically converted in event parameters. Web actions are able to control the HTTP response headers and body to support any content types, manage cookies, and perform HTTP redirects directly.
+
+
+- Invoke a web action from anywhere without defining a trigger or a rule
+- Accessible through a REST interface without the need for credentials
+- Supports any content-type on an HTTP response, including HTML, XML, SVG, PNG, and more, with intelligent defaults for JSON payloads
+- Supports any type of HTTP method including GET, POST (the default), PUT, PATCH, and DELETE, as well as HEAD and OPTIONS
+
+###### API Gateway
+Cloud Functions comes with an integrated API Gateway service. This allows you to create new HTTP APIs which map incoming requests to actions.
+
+The API Gateway handles capabilities like routing based on request properties (URI paths and HTTP method), user authentication, rate limiting, and more. You do not need to implement this feature within the web action code.
+Web actions are actions that can be called externally using the HTTP protocol from clients like curl or web browsers. IBM Cloud Functions (ICF) provides a simple flag, --web true, which causes it to automatically create an HTTP accessible URL (endpoint) for any action.
+```bash
+ibmcloud fn action update hello --web true
+ibmcloud fn action get hello --url
+curl _abc_
+```
 
 OpenWhisk allows to deploy to:
 - Kubernetes
